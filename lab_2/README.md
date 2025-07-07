@@ -9,6 +9,8 @@ This assignment explores **pairwise and multiple sequence alignment (MSA)** tech
 - MSA using ClustalW
 - Consensus sequence generation
 - Visualization of alignment results
+- Use of substitution matrices (BLOSUM62)
+- Both global (Needleman-Wunsch) and local (Smith-Waterman) alignment
 
 ---
 
@@ -16,16 +18,18 @@ This assignment explores **pairwise and multiple sequence alignment (MSA)** tech
 
 ```bash
 .
-├── fetch_sequences.py          # Script to fetch FASTA sequences from NCBI
-├── pairwise_alignment.py       # Performs pairwise global alignment
-├── msa_visualize.py            # Loads MSA results and prints consensus
-├── human.fasta                 # Human HBB gene (NM_000518.5)
-├── mouse.fasta                 # Mouse HBB gene (NM_008220.2)
-├── rat.fasta                   # Rat HBB gene (NM_013096.2)
-├── all_sequences.fasta         # Combined FASTA for MSA
-├── all_sequences.aln           # ClustalW alignment result
-├── all_sequences.dnd           # ClustalW guide tree
-└── README.md                   # This documentation file
+├── fetch_sequences.py             # Script to fetch FASTA sequences from NCBI
+├── pairwise_alignment.py          # Performs pairwise global alignment (globalxx)
+├── pairwise_alignment_blosum.py   # Performs global alignment using BLOSUM62
+├── local_alignment.py             # Performs local alignment (Smith-Waterman)
+├── msa_visualize.py               # Loads MSA results and prints consensus
+├── human.fasta                    # Human HBB gene (NM_000518.5)
+├── mouse.fasta                    # Mouse HBB gene (NM_008220.2)
+├── rat.fasta                      # Rat HBB gene (NM_013096.2)
+├── all_sequences.fasta            # Combined FASTA for MSA
+├── all_sequences.aln              # ClustalW alignment result
+├── all_sequences.dnd              # ClustalW guide tree
+└── README.md                      # This documentation file
 ```
 
 ---
@@ -59,9 +63,19 @@ pip3 install biopython
   python3 fetch_sequences.py
   ```
 
-- Pairwise Alignment:
+- Pairwise Alignment (simple global):
   ```bash
   python3 pairwise_alignment.py
+  ```
+
+- Pairwise Alignment using BLOSUM62:
+  ```bash
+  python3 pairwise_alignment_blosum.py
+  ```
+
+- Local Alignment using Smith-Waterman:
+  ```bash
+  python3 local_alignment.py
   ```
 
 - Combine Sequences for MSA:
@@ -97,7 +111,8 @@ pip3 install biopython
 ### Key Concepts
 
 - **Global Alignment**: Needleman-Wunsch algorithm (`pairwise2.globalxx`)
-- **Substitution Matrices**: Defaults or BLOSUM62 can be used
+- **Local Alignment**: Smith-Waterman algorithm (`pairwise2.localds`)
+- **Substitution Matrices**: BLOSUM62 used via `substitution_matrices.load("BLOSUM62")`
 - **Multiple Sequence Alignment**: Performed via ClustalW
 - **Consensus Sequence**: Derived using `AlignInfo.SummaryInfo`
 
@@ -110,4 +125,3 @@ pip3 install biopython
 - ClustalW2: Thompson et al., Nucleic Acids Res. 1994
 
 ---
-
