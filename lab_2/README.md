@@ -29,6 +29,10 @@ This assignment explores **pairwise and multiple sequence alignment (MSA)** tech
 ├── all_sequences.fasta            # Combined FASTA for MSA
 ├── all_sequences.aln              # ClustalW alignment result
 ├── all_sequences.dnd              # ClustalW guide tree
+├── psiblast_remote.py             # Runs remote PSI-BLAST via NCBI
+├── psiblast_result.xml            # PSI-BLAST results (XML format)
+├── 1A3N.pdb                       # Hemoglobin structure file (from RCSB)
+├── structure_parser.py            # Parses PDB file and prints structure hierarchy
 └── README.md                      # This documentation file
 ```
 
