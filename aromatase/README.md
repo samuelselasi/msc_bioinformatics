@@ -1,47 +1,91 @@
-# Aromatase Bioactivity Pipeline
+# Aromatase QSAR + Docking Pipeline
 
-End-to-end reproducible pipeline to:
-1. Fetch aromatase IC50 data from ChEMBL.
-2. Clean, label (active, intermediate, inactive), and compute pIC50.
-3. Generate RDKit Morgan fingerprints.
-4. Train baseline models for classification and regression.
-5. Run single or batch inference from SMILES.
+> A compact, reproducible pipeline that (1) *learns QSAR models for aromatase (CYP19A1) inhibition*, (2) *screens an external library (AfroDB/EANPDB)*, and (3) *docks those compounds into an aromatase crystal structure to prioritize putative hits*. Everything is wired through a `Makefile` for one-liners and easy reruns.
+
+## What this pipeline does
+
+1. **Fetch & clean data** from ChEMBL for aromatase activity.
+2. **Label** (active/inactive) and compute **pIC50**.
+3. **Featurize** molecules with RDKit **Morgan fingerprints**.
+4. **Train** baseline ML models (classifier & regressor).
+5. **Predict** activity and pIC50 for **AfroDB/EANPDB** molecules.
+6. **Prepare receptor** (PDB **5JL9**) and **ligands** for docking.
+7. **Dock** ligands with AutoDock **Vina 1.2.3** and collect scores.
+8. (*Optional*) **Rank** hits by docking and (optionally) fuse with ML predictions.
 
 ---
 
-## Quick start
+## Repository Layout
 
 ```
-python3 -m venv .venv && source .venv/bin/activate
+aromatase/
+├─ data/
+│  ├─ external/afrodb/           # AfroDB/EANPDB .smi input
+│  ├─ raw/                       # downloaded sources (ChEMBL, PDB)
+│  └─ processed/                 # cleaned tables, fingerprints, 3D SDF/PDBQT ligands
+├─ docking/                      # receptor + Vina grid (receptor.pdbqt, config.txt)
+├─ results/
+│  ├─ predictions/               # model outputs (AfroDB cls/reg)
+│  └─ docking/                   # Vina poses + scores.csv
+├─ scripts/                      # data/ML/prediction/prep/docking utilities
+├─ env/requirements.txt          # Python deps (pin numpy<2 if using older RDKit builds)
+└─ Makefile                      # one-liners for the end-to-end workflow
+```
+
+---
+
+## Quickstart
+
+```
+# 0) environment
+python3 -m venv .venv
+. .venv/bin/activate
 pip install -r env/requirements.txt
 
-# Build data and descriptors
+# 1) data + features
 make data-all
 
-# Train models
+# 2) (optional) train models
 make train-cls
 make train-reg
 
-# Predict from a SMILES
-make predict-cls SMILES="CCO" MODEL=cls_random_forest
-make predict-reg SMILES="CCO" MODEL=reg_random_forest
+# 3) batch predictions on AfroDB
+#    (place your .smi at data/external/afrodb/smiles_unique_EANPDB.smi)
+make predict-afrodb-cls
+make predict-afrodb-reg
+
+# 4) docking
+make docking-prepare            # builds receptor.pdbqt + config.txt (PDB=5JL9 by default)
+make docking-ligands-afrodb     # 3D SDF + PDBQT for AfroDB ligands
+make docking-run                # runs Vina 1.2.3 over prepared ligands
+
+# 5) inspect results
+head results/predictions/afrodb_cls.csv
+head results/predictions/afrodb_reg.csv
+head results/docking/scores.csv
 ```
 
-## Project Layout
+### Key Outputs
+* **Predictions (AfroDB)**
+	* `results/predictions/afrodb_cls.csv` — `prob_active, pred_class`
+	* `results/predictions/afrodb_reg.csv` — `pred_pIC50 (and pred_IC50_nM if requested)`
+* **Docking**
+	* `results/docking/scores.csv` — affinity (kcal/mol), **more negative = better**
+	* `results/docking/<ligand>_out.pdbqt` — docked pose for each ligand
 
+* **Intermediate data**
+	* `data/processed/*pIC50.csv` — cleaned/labelled tables
+	* `data/processed/bioactivity_data_descriptors_morgan.csv` — fingerprint matrix
+
+### Mkefile Cheatsheet
 ```
-data/
-  raw/                 # Raw ChEMBL CSV
-  processed/           # Labeled, pIC50, and descriptors
-  external/            # Optional third-party files (SDF)
-env/                   # Environment files
-results/
-  figures/             # Plots from training
-  models/              # Saved joblib models
-  tables/              # Reports and feature ranks
-  predictions/         # Inference outputs
-scripts/               # All pipeline and training scripts
-notebooks/             # Optional exploration
+make data-all                 # ChEMBL → labels → pIC50 → fingerprints
+make train-cls / train-reg    # train models (saved in results/models/)
+make predict-afrodb-cls       # classify AfroDB .smi
+make predict-afrodb-reg       # regress pIC50 for AfroDB .smi
+make docking-prepare          # receptor.pdbqt + config.txt (from PDB=5JL9)
+make docking-ligands-afrodb   # build 3D SDF + PDBQT for AfroDB ligands
+make docking-run              # batch dock with Vina 1.2.3 → scores.csv
 ```
 
 ---
