@@ -65,19 +65,13 @@ notebooks/             # Optional exploration
 
 Run `make help` for a quick list of targets.
 
-```
-
----
-
-# env/README.md
-```markdown
 # env
 
 Environment and dependency management.
 
 ## Install
 
-```bash
+```
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r env/requirements.txt
 ```
