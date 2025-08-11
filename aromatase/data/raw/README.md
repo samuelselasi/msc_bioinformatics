@@ -8,5 +8,16 @@ Raw aromatase IC50 data fetched from ChEMBL.
   - `standard_value`      IC50 in nM
 
 Rebuild with:
-```bash
+```
 make data-raw
+```
+
+Downloaded PDB coordinates (via `scripts/fetch_pdb.py`).
+
+- Filenames may be `.pdb`, `.ent`, or `.gz`.
+- Receptor prep will auto-detect and (if needed) decompress.
+
+## Fetch
+bash
+make pdb PDB=5JL9
+```

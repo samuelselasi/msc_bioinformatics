@@ -33,5 +33,24 @@ Outputs go to `results/`:
 
 ---
 
+## Docking
+- `fetch_pdb.py` — fetches PDB files into `data/raw/pdb/`.
+- `prepare_receptor.py` — writes `docking/receptor.pdb(pqt)` and `docking/config.txt`.
+  - Uses BioPython + Open Babel (pip-only). Hydrogens added at pH with `-p` (no `-h`).
+- `prepare_ligands.py` — makes 3D SDF + PDBQT ligands from CSV or `.smi`.
+  - Prefers Meeko (0.5.x); falls back to Open Babel if needed.
+  - Sanitizes ligand IDs for filesystem safety.
+- `dock_batch.py` — batch docking with Vina 1.2.3; writes per-ligand logs + `scores.csv`.
+
+---
+
+## Typical commands
+- Build data: `make data-all`
+- Prepare docking: `make docking-prepare`
+- Ligands from AfroDB `.smi`: `make docking-ligands-afrodb`
+- Run docking: `make docking-run`
+
+---
+
 ## Protein
 - `fetch_pdb.py` → downloads PDB file (default 5JL9) into `data/raw/pdb/`

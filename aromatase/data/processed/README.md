@@ -16,3 +16,10 @@ Rebuild with:
 make data-processed
 make fps
 ```
+
+## Recreate
+```
+make data-all
+make docking-ligands          # from processed CSV actives
+make docking-ligands-afrodb   # from AfroDB .smi
+```

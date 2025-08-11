@@ -8,22 +8,41 @@ P3  := data/processed/bioactivty_data_preprocessed_class.csv
 PPI := data/processed/bioactivity_data_3class_pIC50.csv
 FPS := data/processed/bioactivity_data_descriptors_morgan.csv
 
+# external inputs
+AFRO_SMI := data/external/afrodb/smiles_unique_EANPDB.smi
+
 # default PDB ID
 PDB ?= 5JL9
 
-.PHONY: help install clean data-all data-raw data-processed fps pdb train-cls train-reg predict-cls predict-reg
+.PHONY: help install clean data-all data-raw data-processed fps pdb \
+        train-cls train-reg predict-cls predict-reg \
+        docking-prepare docking-ligands docking-run docking-all \
+        docking-ligands-afrodb predict-afrodb-cls predict-afrodb-reg \
+        rank-hits export-top-poses
 
 help:
-	@echo "make install        # create venv and install deps"
-	@echo "make data-all       # fetch chembl -> labels -> pIC50 -> morgan fps"
-	@echo "make data-raw       # build just the raw ChEMBL CSV"
-	@echo "make data-processed # build labeled + pIC50 CSVs"
-	@echo "make fps            # build Morgan fingerprints only"
-	@echo "make pdb PDB=5JL9   # download PDB (default 5JL9)"
-	@echo "make train-cls      # train classifier (active vs inactive)"
-	@echo "make train-reg      # train regressor (pIC50)"
+	@echo "make install                     # create venv and install deps"
+	@echo "make data-all                    # fetch chembl -> labels -> pIC50 -> morgan fps"
+	@echo "make data-raw                    # build just the raw ChEMBL CSV"
+	@echo "make data-processed              # build labeled + pIC50 CSVs"
+	@echo "make fps                         # build Morgan fingerprints only"
+	@echo "make pdb PDB=5JL9                # download PDB (default 5JL9)"
+	@echo "make train-cls                   # train classifier (active vs inactive)"
+	@echo "make train-reg                   # train regressor (pIC50)"
 	@echo "make predict-cls SMILES='CCO' MODEL=cls_random_forest"
 	@echo "make predict-reg SMILES='CCO' MODEL=reg_random_forest"
+	@echo "---- Docking ----"
+	@echo "make docking-prepare             # fix receptor, write receptor.pdbqt + grid config"
+	@echo "make docking-ligands             # build ligands from processed CSV (actives)"
+	@echo "make docking-ligands-afrodb      # build ligands from $(AFRO_SMI)"
+	@echo "make docking-run                 # run vina over prepared ligands"
+	@echo "make docking-all                 # prepare + ligands + run"
+	@echo "---- AfroDB predictions ----"
+	@echo "make predict-afrodb-cls          # classify AfroDB .smi"
+	@echo "make predict-afrodb-reg          # regress pIC50 for AfroDB .smi"
+	@echo "---- Post-processing ----"
+	@echo "make rank-hits [TOP=50]          # merge dock scores + ML preds into ranked hitlist"
+	@echo "make export-top-poses [TOP=20]   # export top poses to one SDF"
 
 install:
 	python3 -m venv $(VENV)
@@ -72,5 +91,42 @@ predict-reg: $(FPS) scripts/predict.py
 	@if [ -z "$(SMILES)" ]; then echo 'Usage: make predict-reg SMILES="CCO" MODEL=reg_random_forest'; exit 1; fi
 	$(VENV)/bin/python scripts/predict.py --task reg --smiles "$(SMILES)" --model-name $${MODEL:-reg_random_forest}
 
+# --- Docking ---
+# receptor: ensure pdb fetched first
+docking-prepare: pdb scripts/prepare_receptor.py
+	$(VENV)/bin/python scripts/prepare_receptor.py --pdb-id $(PDB)
+
+# ligands from processed CSV (actives by default)
+docking-ligands: $(FPS) scripts/prepare_ligands.py
+	$(VENV)/bin/python scripts/prepare_ligands.py --csv data/processed/bioactivity_data_3class_pIC50.csv --subset active --limit 200
+
+# ligands from AfroDB/EANPDB .smi
+docking-ligands-afrodb: scripts/prepare_ligands.py
+	@test -f "$(AFRO_SMI)" || (echo "Missing $(AFRO_SMI). Put your .smi there."; exit 2)
+	$(VENV)/bin/python scripts/prepare_ligands.py --smi $(AFRO_SMI) --limit 200
+
+# run vina (Vina 1.2.3: logs are captured by dock_batch.py)
+docking-run: scripts/dock_batch.py
+	$(VENV)/bin/python scripts/dock_batch.py
+
+# full docking pipeline (receptor + ligands from processed CSV + run)
+docking-all: docking-prepare docking-ligands docking-run
+
+# AfroDB predictions (batch)
+predict-afrodb-cls: scripts/predict.py
+	@test -f "$(AFRO_SMI)" || (echo "Missing $(AFRO_SMI). Put your .smi there."; exit 2)
+	$(VENV)/bin/python scripts/predict.py --task cls --in $(AFRO_SMI) --model-name cls_random_forest --out results/predictions/afrodb_cls.csv
+
+predict-afrodb-reg: scripts/predict.py
+	@test -f "$(AFRO_SMI)" || (echo "Missing $(AFRO_SMI). Put your .smi there."; exit 2)
+	$(VENV)/bin/python scripts/predict.py --task reg --in $(AFRO_SMI) --model-name reg_random_forest --as-ic50-nm --out results/predictions/afrodb_reg.csv
+
+# --- Post-processing / ranking ---
+rank-hits: results/docking/scores.csv scripts/rank_hits.py
+	$(VENV)/bin/python scripts/rank_hits.py --top $${TOP:-50}
+
+export-top-poses: scripts/export_top_poses.py
+	$(VENV)/bin/python scripts/export_top_poses.py --top $${TOP:-20}
+
 clean:
-	rm -rf data/processed/*.csv data/raw/*.csv data/raw/pdb results/*
+	rm -rf data/processed/*.csv data/raw/*.csv data/raw/pdb docking/*.pdb* docking/config.txt results/*

@@ -1,0 +1,10 @@
+receptor = docking/receptor.pdbqt
+center_x = 85.702
+center_y = 54.180
+center_z = 46.189
+size_x = 32.0
+size_y = 32.0
+size_z = 32.0
+exhaustiveness = 8
+num_modes = 9
+energy_range = 3

@@ -1,7 +1,15 @@
+
 # Predictions
 
-CSV predictions from `scripts/predict.py`.
+Model predictions exported by `scripts/predict.py`.
 
-Example files:
-- `pred_cls_cls_random_forest.csv`
-- `pred_reg_reg_random_forest.csv`
+Typical files:
+- `afrodb_cls.csv` — classification (prob_active, pred_class) for AfroDB .smi.
+- `afrodb_reg.csv` — regression (pred_pIC50 [+ IC50 nM]) for AfroDB .smi.
+- `pred_cls_*.csv` / `pred_reg_*.csv` — generic outputs when using different models.
+
+## Generate:
+```
+make predict-afrodb-cls
+make predict-afrodb-reg
+```
