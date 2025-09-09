@@ -76,7 +76,7 @@ def write_protein_only(src: Path, dst: Path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pdb-id", default="5JL9")
+    ap.add_argument("--pdb-id", default="3S79")
     ap.add_argument("--ph", type=float, default=7.4)
     ap.add_argument("--size", type=float, nargs=3, default=[22,22,22])
     ap.add_argument("--obabel", default="obabel")
