@@ -11,5 +11,5 @@ def main(pdb_id="3S79"):
     print(f"Downloaded PDB {pdb_id} to {outdir}")
 
 if __name__ == "__main__":
-    pdb_id = sys.argv[1] if len(sys.argv) > 1 else "5JL9"
+    pdb_id = sys.argv[1] if len(sys.argv) > 1 else "3S79"
     main(pdb_id)
