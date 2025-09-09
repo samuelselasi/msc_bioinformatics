@@ -37,32 +37,50 @@ aromatase/
 ## Quickstart
 
 ```
+
 # 0) environment
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r env/requirements.txt
 
-# 1) data + features
+# 1) data → labels → pIC50 → fingerprints (original pipeline)
 make data-all
 
-# 2) (optional) train models
-make train-cls
-make train-reg
+# 2) deduplicate + stats (canonical SMILES; keep most potent per unique)
+make dedup-stats
+# writes:
+#   data/processed/bioactivity_data_3class_pIC50_dedup.csv
+#   results/tables/dedup_stats.{json,csv}
 
-# 3) batch predictions on AfroDB
-#    (place your .smi at data/external/afrodb/smiles_unique_EANPDB.smi)
-make predict-afrodb-cls
-make predict-afrodb-reg
+# 3) build fingerprints for the deduplicated set
+make fps-dedup
+# writes:
+#   data/processed/bioactivity_data_descriptors_morgan_dedup.csv
 
-# 4) docking
-make docking-prepare            # builds receptor.pdbqt + config.txt (PDB=5JL9 by default)
-make docking-ligands-afrodb     # 3D SDF + PDBQT for AfroDB ligands
-make docking-run                # runs Vina 1.2.3 over prepared ligands
+# 4) train a *balanced* classifier on the dedup set
+make train-cls-dedup                # uses class_weight="balanced"
+# (optional) compare with SMOTE (requires imbalanced-learn)
+make train-cls-dedup SMOTE=1
 
-# 5) inspect results
-head results/predictions/afrodb_cls.csv
+# 5) batch predictions on AfroDB (put your .smi at data/external/afrodb/smiles_unique_EANPDB.smi)
+make predict-afrodb-cls-dedup       # uses the dedup-trained classifier
+make predict-afrodb-reg             # pIC50 regression (baseline model)
+
+# 6) docking
+#    (change the PDB ID if you want, e.g. PDB=3S79)
+make docking-prepare PDB=5JL9       # builds receptor.pdbqt + docking/config.txt
+make docking-ligands-afrodb         # 3D SDF + PDBQT for AfroDB ligands
+make docking-run                    # runs AutoDock Vina 1.2.3 over prepared ligands
+
+# 7) inspect results
+head results/predictions/afrodb_cls_dedup.csv
 head results/predictions/afrodb_reg.csv
 head results/docking/scores.csv
+
+# (optional) consensus ranking + pose export
+make rank-hits TOP=50
+make export-top-poses TOP=20
+
 ```
 
 ### Key Outputs
