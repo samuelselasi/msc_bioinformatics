@@ -20,15 +20,15 @@ AutoDock Vina v1.2.3
 Scoring function : vina
 Rigid receptor: docking/receptor.pdbqt
 Ligand: data/processed/ligands_pdbqt/uvarinol.pdbqt
-Grid center: X 85.702 Y 54.18 Z 46.189
-Grid size  : X 32 Y 32 Z 32
+Grid center: X 85.778 Y 54.148 Z 46.03
+Grid size  : X 22 Y 22 Z 22
 Grid space : 0.375
 Exhaustiveness: 8
 CPU: 0
 Verbosity: 1
 
 Computing Vina grid ... done.
-Performing docking (random seed: 1454439900) ... 
+Performing docking (random seed: -2061012547) ... 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
@@ -36,15 +36,12 @@ Performing docking (random seed: 1454439900) ...
 mode |   affinity | dist from best mode
      | (kcal/mol) | rmsd l.b.| rmsd u.b.
 -----+------------+----------+----------
-   1       -12.02          0          0
-   2       -11.71      2.107      6.574
-   3       -11.34      1.918      8.364
-   4       -11.32      1.457      2.054
-   5       -11.29      2.038        8.4
-   6       -10.66      1.708      6.046
-   7       -10.52      2.041      6.659
-   8       -10.39      1.915      5.553
-   9       -9.906      2.115      8.469
-
---- STDERR ---
-WARNING: Search space volume is greater than 27000 Angstrom^3 (See FAQ)
+   1       -13.51          0          0
+   2        -12.4      1.317      2.601
+   3       -11.86       2.08      8.441
+   4       -11.56      2.104      8.142
+   5        -11.5      2.109      8.571
+   6       -11.46      1.829      6.716
+   7       -11.44      1.794      6.348
+   8       -11.23       1.75      6.708
+   9       -11.18      2.271      9.199
