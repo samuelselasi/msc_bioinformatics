@@ -3,7 +3,7 @@ from Bio.PDB import PDBList
 from pathlib import Path
 import sys
 
-def main(pdb_id="5JL9"):
+def main(pdb_id="3S79"):
     outdir = Path("data/raw/pdb")
     outdir.mkdir(parents=True, exist_ok=True)
     pdbl = PDBList()
